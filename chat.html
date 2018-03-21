@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Node.js chat</title>
+  <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+  <script type="text/javascript" src="jquery-1.7.2.js"></script>
+  <script type="text/javascript" src="/nowjs/now.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      now.receiveMessage = function(time, name, message) {
+        $("#messages").append("<br />[" + time + "] &lt" + name + "&gt: " + message);
+      };
+
+      now.addName = function(name) {
+        $("#names").append("<li>" + name + "</li>");
+      };
+
+      $("#send-button").click(function() {
+        now.distributeMessage($("#text-input").val());
+        $("#text-input").val("");
+      });
+
+      $("#text-input").keyup(function(event) {
+        if (event.which == 13) {
+          now.distributeMessage($("#text-input").val());
+          $("#text-input").val("");
+        }
+      });
+
+      now.name = prompt("What's your name?");
+      $("#welcome").append("Welcome " + now.name);
+    });
+  </script>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row-fluid">
+
+      <div class="span2">
+        <div class="page-header">
+          <h2>Names</h2>
+        </div>
+        <ul id="names"></ul>
+      </div>
+
+      <div class="span8">
+        <div class="page-header">
+          <h1 id="welcome"></h1>
+        </div>
+
+        <div id="messages"></div>
+
+        <hr />
+
+        <div class="well">
+          <input type="text" id="text-input" class="span8">
+          <input type="button" value="Send" id="send-button" class="btn-primary">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
