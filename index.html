@@ -5,6 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery-json/2.6.0/jquery.json.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/datejs/1.0/date.min.js'></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    $(document).ready(function(){
+      // tanya untuk join ke chat
+      $('#ask').show();
+      $('#ask input').focus();
+      // masuk!!
+      $('#ask input').keydown(function(event) {
+        if (event.keyCode == 13) {
+          $('#ask a').click();
+        }
+      })
+      // atau masuk dengan klik button
+      $('#ask a').click(function() {
+        join($('#ask input').val());
+        $('#ask').hide();
+        $('#channel').show();
+        $('input#message').focus();
+      });
+      function join(name) {
+        var host = window.location.host.split(':')[0];
+        var socket = io();
+        
+        // kirim join message
+        socket.emit('join', $.toJSON({ user: name }));
+        
+        var container = $('div#msgs');
+        
+        // handler untuk callback
+        socket.on('chat', function (msg) {
+          var message = $.evalJSON(msg);
+          
+          var action = message.action;
+          var struct = container.find('li.' + action + ':first');
+          
+          if (struct.length < 1) {
+            console.log("Could not handle: " + message);
+            return;
+          }
+          
+          // tampilkan pesan baru
+          var messageView = struct.clone();
+          
+          // set time
+          messageView.find('.time').text((new Date()).toString("HH:mm:ss"));
+          
+          switch (action) {
+            case 'message': var matches;
+                    // ada yang chat ke saya (me) . . .
+                    if (matches = message.msg.match(/^\s*[\/\\]me\s(.*)/)) {
+                      messageView.find('.user').text(message.user + ' ' + matches[1]);
+                      messageView.find('.user').css('font-weight', 'bold');
+                    // chat pada umumnya					
+                    } else {
+                      messageView.find('.user').text(message.user);
+                      messageView.find('.message').text(': ' + message.msg);									
+                    }
+                    break;
+            case 'control': messageView.find('.user').text(message.user);
+                    messageView.find('.message').text(message.msg);
+                    messageView.addClass('control');
+                    break;
+          }
+          
+          // bedakan warna antara user berbeda dengan user sendiri
+          if (message.user == name) messageView.find('.user').addClass('self');
+          
+          // append!
+          container.find('ul').append(messageView.show());
+          container.scrollTop(container.find('ul').innerHeight());
+        });
+        // ada pesan baru
+        $('#channel form').submit(function(event) {
+          event.preventDefault();
+          var input = $(this).find(':input');
+          var msg = input.val();
+          socket.emit('chat', $.toJSON({action: 'message', user: name, msg: msg}));
+          input.val('');
+        }); 
+      }
+    });
+    </script>
 </head>
 <body>
   
